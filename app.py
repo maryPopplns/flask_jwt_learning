@@ -12,7 +12,7 @@ load_dotenv()
 app = Flask(__name__)
 app.config["DEBUG"] = True
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://spencer:password@localhost/jwt_learning'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 
