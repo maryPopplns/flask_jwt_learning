@@ -2,6 +2,7 @@ import os
 import jwt
 import json
 import psycopg2
+from functools import wraps
 from dotenv import load_dotenv
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, timedelta
@@ -28,7 +29,7 @@ class User(db.Model):
 
 def encode_token(user_id):
     payload = {
-        'exp': datetime.utcnow() + timedelta(days=0, seconds=5),
+        'exp': datetime.utcnow() + timedelta(days=1),
         'iat': datetime.utcnow(),
         'sub': user_id
     }
@@ -108,6 +109,34 @@ def post():
             "Message": "User login failed"
         }
         return make_response(jsonify(resp)), 404
+
+
+def token_required(f):
+    @wraps(f)
+    def decorator(*args, **kwargs):
+        token = None
+        if "Authorization" in request.headers:
+            token = request.headers["Authorization"].split(" ")[1]
+
+        if not token:
+            return jsonify({'message': 'a valid token is missing'})
+        try:
+            data = jwt.decode(
+                token, os.getenv('SECRET_KEY'), algorithms=["HS256"])
+            current_user = User.query.filter_by(
+                id=data['sub']).first()
+        except:
+            return jsonify({'message': 'token is invalid'})
+
+        return f(current_user, *args, **kwargs)
+    return decorator
+
+
+@app.route('/protected', methods=['GET'])
+@token_required
+def protected(f):
+    resp = {"message": "you are viewing a protected route"}
+    return make_response(jsonify(resp)), 404
 
 
 if __name__ == '__main__':
