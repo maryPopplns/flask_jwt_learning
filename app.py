@@ -1,7 +1,5 @@
 import os
 import jwt
-import json
-import psycopg2
 from functools import wraps
 from dotenv import load_dotenv
 from flask_sqlalchemy import SQLAlchemy
@@ -40,7 +38,7 @@ def encode_token(user_id):
 
 @app.route('/')
 def hello_world():
-    return 'Welcome to JWT Tokens'
+    return jsonify(hello='world')
 
 
 @app.route('/register', methods=['POST'])
@@ -137,8 +135,3 @@ def token_required(f):
 def protected(f):
     resp = {"message": "you are viewing a protected route"}
     return make_response(jsonify(resp)), 404
-
-
-if __name__ == '__main__':
-    db.create_all()
-    app.run(port=5002)
